@@ -48,16 +48,15 @@ call = do
 
 term :: Parser Expr
 term =
-  dbg "term" $
-    choice
-      [ try floating,
-        try int,
-        try extern,
-        try function,
-        dbg "call" $ try call,
-        dbg "var" $ try variable,
-        parens expr
-      ]
+  choice
+    [ try floating,
+      try int,
+      try extern,
+      try function,
+      try call,
+      try variable,
+      parens expr
+    ]
 
 defn :: Parser Expr
 defn =
