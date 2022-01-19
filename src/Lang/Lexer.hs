@@ -2,16 +2,16 @@
 
 module Lang.Lexer where
 
+import Control.Monad (void)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Void (Void)
+import Lang.Syntax (Parser)
 import Text.Megaparsec (Parsec, between, choice, many, optional, sepBy, try)
 import qualified Text.Megaparsec as M
 import Text.Megaparsec.Char (char, space1)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as CL
-
-type Parser = Parsec Void Text
 
 spaceConsumer :: Parser ()
 spaceConsumer =
@@ -63,15 +63,8 @@ semiSep p = p `sepBy` char ';'
 commaSep :: Parser a -> Parser [a]
 commaSep p = p `sepBy` char ','
 
-reversed :: Parser Text
-reversed =
-  choice $
-    symbol
-      <$> [ "def",
-            "extern"
-          ]
+reserved :: Text -> Parser ()
+reserved = void . C.string
 
-reversedOp :: Parser Text
-reversedOp =
-  choice $
-    symbol <$> ["+", "*", "-", "/"]
+reservedOp :: Text -> Parser ()
+reservedOp = void . C.string

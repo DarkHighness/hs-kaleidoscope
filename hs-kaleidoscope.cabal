@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Lang.Lexer
+      Lang.Parser
       Lang.Syntax
       Lib
   other-modules:
@@ -40,6 +41,7 @@ library
     , llvm-hs-pure
     , megaparsec
     , mtl
+    , parser-combinators
     , text
   default-language: Haskell2010
 
@@ -61,6 +63,7 @@ executable hs-kaleidoscope-exe
     , llvm-hs-pure
     , megaparsec
     , mtl
+    , parser-combinators
     , text
   default-language: Haskell2010
 
@@ -83,5 +86,6 @@ test-suite hs-kaleidoscope-test
     , llvm-hs-pure
     , megaparsec
     , mtl
+    , parser-combinators
     , text
   default-language: Haskell2010
