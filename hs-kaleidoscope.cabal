@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Lang.Lexer
+      Lang.Syntax
       Lib
   other-modules:
       Paths_hs_kaleidoscope
