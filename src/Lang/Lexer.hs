@@ -74,4 +74,4 @@ reversed =
 reversedOp :: Parser Text
 reversedOp =
   choice $
-    symbol <$> ["+", "*", "-", ";"]
+    symbol <$> ["+", "*", "-", "/"]
