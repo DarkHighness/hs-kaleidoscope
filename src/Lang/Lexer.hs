@@ -48,23 +48,23 @@ signedFloat :: Parser Double
 signedFloat = CL.signed spaceConsumer float
 
 identifier :: Parser Text
-identifier = do
+identifier = lexeme $ do
   h <- choice [C.letterChar, char '$']
   b <- many C.alphaNumChar
   t <- many (char '\'')
   (return . T.pack) (h : b ++ t)
 
 parens :: Parser a -> Parser a
-parens = between (char '(') (char ')')
+parens = between (symbol "(") (symbol ")")
 
 semiSep :: Parser a -> Parser [a]
-semiSep p = p `sepBy` char ';'
+semiSep p = p `sepBy` symbol ";"
 
 commaSep :: Parser a -> Parser [a]
-commaSep p = p `sepBy` char ','
+commaSep p = p `sepBy` symbol ","
 
 reserved :: Text -> Parser ()
-reserved = void . C.string
+reserved = void . symbol
 
 reservedOp :: Text -> Parser ()
-reservedOp = void . C.string
+reservedOp = void . symbol

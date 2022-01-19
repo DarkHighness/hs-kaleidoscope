@@ -36,6 +36,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , haskeline
     , lens
     , llvm-hs
     , llvm-hs-pure
@@ -57,6 +58,7 @@ executable hs-kaleidoscope-exe
   build-depends:
       base >=4.7 && <5
     , containers
+    , haskeline
     , hs-kaleidoscope
     , lens
     , llvm-hs
@@ -80,6 +82,7 @@ test-suite hs-kaleidoscope-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , haskeline
     , hs-kaleidoscope
     , lens
     , llvm-hs
