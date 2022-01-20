@@ -2,23 +2,22 @@
 
 module Lang.Emit where
 
+import Lang.Codegen
 import Control.Applicative
 import Control.Monad.Except
 import Data.Int
 import qualified Data.Map as Map
-import Data.String.Transform (ToShortByteString (toShortByteString))
-import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Word
-import GHC.Stack (HasCallStack)
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Constant as C
 import qualified LLVM.AST.Float as F
 import qualified LLVM.AST.FloatingPointPredicate as FP
 import LLVM.Context
 import LLVM.Module
-import Lang.Codegen
 import qualified Lang.Syntax as S
+import Data.String.Transform (toShortByteString)
+import Data.Text (Text)
+import qualified Data.Text as T
 
 toSig :: [Text] -> [(AST.Type, AST.Name)]
 toSig = map (\x -> (double, AST.Name . toShortByteString $ x))
@@ -32,9 +31,9 @@ codegenTop (S.Function name args body) = do
       execCodegen $ do
         entry <- addBlock entryBlockName
         setBlock entry
-        forM_ args $ \a -> do
+        forM args $ \a -> do
           var <- alloca double
-          store var (local (AST.Name . toShortByteString $ a))
+          store var (local (AST.Name a))
           assign a var
         cgen body >>= ret
 codegenTop (S.Extern name args) = do
@@ -59,19 +58,18 @@ lt a b = do
   test <- fcmp FP.ULT a b
   uitofp double test
 
-binops :: Map.Map S.BOp (AST.Operand -> AST.Operand -> Codegen AST.Operand)
 binops =
   Map.fromList
-    [ (S.Plus, fadd),
-      (S.Minus, fsub),
-      (S.Times, fmul),
-      (S.Divide, fdiv),
-      (S.LessThan, lt)
+    [ ("+", fadd),
+      ("-", fsub),
+      ("*", fmul),
+      ("/", fdiv),
+      ("<", lt)
     ]
 
 cgen :: S.Expr -> Codegen AST.Operand
 cgen (S.UnOp op a) = do
-  cgen $ S.Call (T.concat ["unary", T.pack . show $ op]) [a]
+  cgen $ S.Call ("unary" ++ op) [a]
 cgen (S.BinOp S.Equals (S.Var var) val) = do
   a <- getvar var
   cval <- cgen val
@@ -88,21 +86,22 @@ cgen (S.Var x) = getvar x >>= load
 cgen (S.Float n) = return $ cons $ C.Float (F.Double n)
 cgen (S.Call fn args) = do
   largs <- mapM cgen args
-  call (externf (AST.Name . toShortByteString $ fn)) largs
+  call (externf (AST.Name fn)) largs
 
 -------------------------------------------------------------------------------
 -- Compilation
 -------------------------------------------------------------------------------
 
-liftError :: ExceptT String IO a -> IO a
+liftError :: ExceptT Text IO a -> IO a
 liftError = runExceptT >=> either fail return
 
 codegen :: AST.Module -> [S.Expr] -> IO AST.Module
 codegen mod fns = withContext $ \context ->
-  withModuleFromAST context newast $ \m -> do
-    llstr <- moduleLLVMAssembly m
-    print llstr
-    return newast
+  liftError $
+    withModuleFromAST context newast $ \m -> do
+      llstr <- moduleLLVMAssembly m
+      putStrLn llstr
+      return newast
   where
     modn = mapM codegenTop fns
     newast = runLLVM mod modn
