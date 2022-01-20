@@ -3,6 +3,8 @@
 module Lang.Lexer where
 
 import Control.Monad (void)
+import Data.ByteString.Short (ShortByteString)
+import Data.String.Transform (ToShortByteString (toShortByteString), ToTextStrict (toTextStrict))
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Void (Void)
@@ -52,7 +54,7 @@ identifier = lexeme $ do
   h <- choice [C.letterChar, char '$']
   b <- many C.alphaNumChar
   t <- many (char '\'')
-  (return . T.pack) (h : b ++ t)
+  (return . toTextStrict) (h : b ++ t)
 
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
