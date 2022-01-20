@@ -8,17 +8,21 @@ module Lang.Codegen where
 import Control.Lens (makeLenses, use, (.=), (.~), (^.))
 import Control.Monad.State (MonadState, State, execState, gets, modify)
 import Data.ByteString.Short (ShortByteString)
+import Data.Function (on)
+import Data.List (sortBy)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.String.Transform (toShortByteString)
 import Data.Text (Text)
-import LLVM.AST (BasicBlock, Definition (GlobalDefinition), FloatingPointType (DoubleFP), Instruction, Module (moduleDefinitions, moduleName), Name (Name, UnName), Named ((:=)), Operand (ConstantOperand, LocalReference), Parameter (Parameter), Terminator, Type (FloatingPointType), defaultModule, functionDefaults)
+import LLVM.AST (BasicBlock (BasicBlock), Definition (GlobalDefinition), FloatingPointType (DoubleFP), Instruction, Module (moduleDefinitions, moduleName), Name (Name, UnName), Named ((:=)), Operand (ConstantOperand, LocalReference), Parameter (Parameter), Terminator, Type (FloatingPointType), defaultModule, functionDefaults)
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Attribute as Attr
 import qualified LLVM.AST.CallingConvention as CC
 import qualified LLVM.AST.Constant as C
+import qualified LLVM.AST.FloatingPointPredicate as FP
 import LLVM.AST.Global (Global (basicBlocks, linkage, name, parameters, returnType))
 import qualified LLVM.AST.Linkage as L
+import qualified Lang.Syntax as S
 
 double :: Type
 double = FloatingPointType DoubleFP
@@ -64,6 +68,30 @@ fresh = do
   i <- use count
   count .= i + 1
   return (i + 1)
+
+sortBlocks :: [(Name, BlockState)] -> [(Name, BlockState)]
+sortBlocks = sortBy (compare `on` (^. idx) . snd)
+
+createBlocks :: CodegenState -> [BasicBlock]
+createBlocks m = map makeBlock $ sortBlocks $ M.toList (m ^. blocks)
+
+makeBlock :: (Name, BlockState) -> BasicBlock
+makeBlock (l, BlockState _ s t) = BasicBlock l (reverse s) (maketerm t)
+  where
+    maketerm (Just x) = x
+    maketerm Nothing = error $ "Block has no terminator: " ++ show l
+
+entryBlockName :: ShortByteString
+entryBlockName = "entry"
+
+emptyBlock :: Int -> BlockState
+emptyBlock i = BlockState i [] Nothing
+
+emptyCodegen :: CodegenState
+emptyCodegen = CodegenState (Name entryBlockName) M.empty [] 1 0 M.empty
+
+execCodegen :: Codegen a -> CodegenState
+execCodegen m = execState (runCodegen m) emptyCodegen
 
 newtype LLVM a = LLVM (State AST.Module a)
   deriving (Functor, Applicative, Monad, MonadState AST.Module)
@@ -142,9 +170,6 @@ current = do
     Nothing -> error $ "No such block: " ++ show cblk
     Just x -> return x
 
-emptyBlock :: Int -> BlockState
-emptyBlock i = BlockState i [] Nothing
-
 local :: Name -> Operand
 local = LocalReference double
 
@@ -194,6 +219,15 @@ fdiv a b = instr $ AST.FDiv AST.noFastMathFlags a b []
 
 toArgs :: [Operand] -> [(Operand, [Attr.ParameterAttribute])]
 toArgs = map (,[])
+
+fcmp :: FP.FloatingPointPredicate -> Operand -> Operand -> Codegen Operand
+fcmp cond a b = instr $ AST.FCmp cond a b []
+
+cons :: C.Constant -> Operand
+cons = ConstantOperand
+
+uitofp :: Type -> Operand -> Codegen Operand
+uitofp ty a = instr $ AST.UIToFP a ty []
 
 br :: Name -> Codegen (Named Terminator)
 br val = terminator $ AST.Do $ AST.Br val []

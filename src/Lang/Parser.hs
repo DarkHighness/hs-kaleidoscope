@@ -29,15 +29,15 @@ function :: Parser Expr
 function = do
   reserved "def"
   name <- identifier
-  args <- parens $ many variable
-  body <- dbg "expr" $ expr
+  args <- parens $ many identifier
+  body <- expr
   return $ Function name args body
 
 extern :: Parser Expr
 extern = do
   reserved "extern"
   name <- identifier
-  args <- parens $ many variable
+  args <- parens $ many identifier
   return $ Extern name args
 
 call :: Parser Expr
@@ -68,7 +68,7 @@ defn =
 
 contents :: Parser a -> Parser a
 contents p = do
-  try space1
+  space
   r <- p
   eof
   return r
@@ -99,6 +99,10 @@ operatorTable =
     ],
     [ binary "+" (BinOp Plus),
       binary "-" (BinOp Minus)
+    ],
+    [ binary "<" (BinOp LessThan)
+    ],
+    [ binary "=" (BinOp Equals)
     ]
   ]
 

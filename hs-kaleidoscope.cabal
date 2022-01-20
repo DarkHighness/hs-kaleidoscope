@@ -27,6 +27,7 @@ library
   exposed-modules:
       Lang.Codegen
       Lang.Common
+      Lang.Emit
       Lang.Lexer
       Lang.Parser
       Lang.Syntax

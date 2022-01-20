@@ -14,8 +14,8 @@ data Expr
   | UnOp UOp Expr
   | Var Text
   | Call Name [Expr]
-  | Function Name [Expr] Expr
-  | Extern Name [Expr]
+  | Function Name [Name] Expr
+  | Extern Name [Name]
   deriving (Eq, Ord, Show)
 
 data BOp
@@ -23,6 +23,8 @@ data BOp
   | Minus
   | Times
   | Divide
+  | Equals
+  | LessThan
   deriving (Eq, Ord, Show)
 
 data UOp
