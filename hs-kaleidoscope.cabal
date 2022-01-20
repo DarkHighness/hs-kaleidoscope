@@ -25,6 +25,8 @@ source-repository head
 
 library
   exposed-modules:
+      Lang.Codegen
+      Lang.Common
       Lang.Lexer
       Lang.Parser
       Lang.Syntax
@@ -35,6 +37,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , containers
     , haskeline
     , lens
@@ -43,6 +46,7 @@ library
     , megaparsec
     , mtl
     , parser-combinators
+    , string-transform
     , text
   default-language: Haskell2010
 
@@ -57,6 +61,7 @@ executable hs-kaleidoscope-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , containers
     , haskeline
     , hs-kaleidoscope
@@ -66,6 +71,7 @@ executable hs-kaleidoscope-exe
     , megaparsec
     , mtl
     , parser-combinators
+    , string-transform
     , text
   default-language: Haskell2010
 
@@ -81,6 +87,7 @@ test-suite hs-kaleidoscope-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , containers
     , haskeline
     , hs-kaleidoscope
@@ -90,5 +97,6 @@ test-suite hs-kaleidoscope-test
     , megaparsec
     , mtl
     , parser-combinators
+    , string-transform
     , text
   default-language: Haskell2010

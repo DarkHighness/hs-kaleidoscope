@@ -23,6 +23,8 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - text
+- bytestring
+- string-transform
 - mtl
 - lens
 - megaparsec
